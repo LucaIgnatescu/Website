@@ -1,16 +1,36 @@
-import { Header, Navigation } from "@/components/server";
+import { Cards } from "@/components/server"
 
 export default function Page() {
   return <div>
-    <Header />
-    <div className="w-screen px-20 text-2xl">
-      <div className="py-28">
+    <div className="py-20 flex flex-row justify-between " >
+      <span></span>
+      <div className="px-20 text-gray-300 text-xl inline-block ">
+        <span className="px-5 hover:text-white hover:cursor-pointer">
+          Resume
+        </span>
+        <span className="px-5 hover:text-white hover:cursor-pointer">
+          Github
+        </span>
+        <span className="px-5 hover:text-white hover:cursor-pointer">
+          LinkdIn
+        </span>
+        <span className="line-through px-5">
+          Blog
+        </span>
+      </div>
+    </div>
+    <div className="w-screen px-20 text-3xl">
+      <div className="py-28 text-gray-300">
         I am a genius level programmer that makes great websites with an IQ of 200+.
         <br />
         Hire me!!!!
       </div>
-
-      <h1 className="font-bold">Projects</h1>
+      <h2 className="font-bold text-4xl mb-10 after:bg-white after:block after:w-5 after:h-1 after:my-2">Projects</h2>
+      <div><Cards cards={
+        [{ name: "name", description: "description" },
+        { name: "name", description: "description" }]
+      } />
+      </div>
     </div>
   </div>
 }

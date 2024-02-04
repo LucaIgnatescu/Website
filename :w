@@ -1,0 +1,31 @@
+import { Header, Navigation } from "@/components/server";
+
+export default function Page() {
+  return <div>
+    <div className="py-20 flex flex-row justify-between border-white border-2" >
+      <span></span>
+      <div className="px-20 text-xl inline-block border-black border-solid rounded-md border-0">
+        <span className="px-5 text-gray-400">
+          Resume
+        </span>
+        <span className="px-5">
+          Github
+        </span>
+        <span className="px-5">
+          LinkdIn
+        </span>
+        <span className="line-through px-5">
+          Blog
+        </span>
+      </div>
+    </div>
+    <div className="w-screen px-20 text-3xl">
+      <div className="py-28">
+        I am a genius level programmer that makes great websites with an IQ of 200+.
+        <br />
+        Hire me!!!!
+      </div>
+      <h2 className="font-bold text-4xl">Projects</h2>
+    </div>
+  </div>
+}
