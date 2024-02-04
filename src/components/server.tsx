@@ -1,3 +1,4 @@
+import { createClient } from "@supabase/supabase-js";
 import { Fragment } from "react";
 
 type CardInfo = {
@@ -12,7 +13,9 @@ export function Card({ name, description }: CardInfo = { name: null, description
   </span>
 }
 
-export function Cards({ cards }: { cards?: CardInfo[] }) {
+export async function Cards({ cards }: { cards?: CardInfo[] }) {
+  const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || "", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "");
+  console.log(await supabase.from("project").select());
   return <span className="flex flex-row">
     {cards?.map((info, i) => <Fragment key={i}> <Card {...info} /> </Fragment>)}
   </span>
