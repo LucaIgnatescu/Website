@@ -27,8 +27,10 @@ export default function Page() {
       </div>
       <h2 className="font-bold text-4xl mb-10 after:bg-white after:block after:w-5 after:h-1 after:my-2">Projects</h2>
       <div><Cards cards={
-        [{ name: "name", description: "description" },
-        { name: "name", description: "description" }]
+        [{ name: "Linear Transformation", description: "This is a very cool project word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word " },
+        { name: "This website", description: "I mean just look at it." },
+        { name: "This website", description: "I mean just look at it." },
+        {name:"Markdown reader", description:"You will find it later"}]
       } />
       </div>
     </div>
