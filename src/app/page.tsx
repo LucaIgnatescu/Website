@@ -19,7 +19,7 @@ export default function Page() {
         </span>
       </div>
     </div>
-    <div className="w-screen px-20 text-3xl">
+    <div className="w-auto px-20 text-3xl">
       <div className="py-28 text-gray-300">
         I am a genius level programmer that makes great websites with an IQ of 200+.
         <br />
