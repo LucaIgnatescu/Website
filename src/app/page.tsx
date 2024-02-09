@@ -1,6 +1,11 @@
-import { Cards } from "@/components/server"
+import { createClient } from "@/utils/supabase/server"
+import { cookies } from "next/headers";
+export default async function Page() {
+  const client = createClient(cookies()); 
+  const data = await client.auth.getUser();
+  console.log("loaded");
+  console.log(data);
 
-export default function Page() {
   return <div>
     <div className="py-20 flex flex-row justify-between " >
       <span></span>
@@ -26,12 +31,10 @@ export default function Page() {
         Hire me!!!!
       </div>
       <h2 className="font-bold text-4xl mb-10 after:bg-white after:block after:w-5 after:h-1 after:my-2">Projects</h2>
-      <div><Cards cards={
-        [{ name: "Linear Transformation", description: "This is a very cool project word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word  word " },
-        { name: "This website", description: "I mean just look at it." },
-        { name: "This website", description: "I mean just look at it." },
-        {name:"Markdown reader", description:"You will find it later"}]
-      } />
+      <div>
+        {
+          // This is where project list goes 
+        }
       </div>
     </div>
   </div>
