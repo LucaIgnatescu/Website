@@ -2,7 +2,7 @@ import { createClient } from "@/utils/supabase/server"
 import { cookies } from "next/headers";
 export default async function Page() {
   const client = createClient(cookies()); 
-  const data = await client.auth.getUser();
+  const data = await client.auth.getSession();
   console.log("loaded");
   console.log(data);
 
