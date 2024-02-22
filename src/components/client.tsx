@@ -2,7 +2,6 @@
 import { type CardInfo } from "./components";
 import Image from "next/image";
 import { useState } from "react";
-import { createBrowserClient } from '@supabase/ssr'
 
 export function Card({ name, description }: CardInfo = { name: null, description: null }) {
   let [clicked, setClicked] = useState<boolean>(true);
