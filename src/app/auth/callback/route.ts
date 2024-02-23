@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
-import { NextRequest, NextResponse} from "next/server";
+import { NextRequest } from "next/server";
+import postgres from "postgres";
 
 export async function GET(req: NextRequest) {
   const code = req.nextUrl.searchParams.get('code')!;
