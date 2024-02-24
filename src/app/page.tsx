@@ -1,14 +1,4 @@
-import postgres from "postgres";
-
 export default async function Page() {
-  const sql = postgres({
-    host:process.env.DB_ENDPOINT,
-    database:process.env.DB_DATABASE,
-    username:process.env.DB_USERNAME,
-    password:process.env.DB_PASSWORD
-  })
-
-  console.log(await sql`select * from test`);
 
   return <div>
     <div className="py-20 flex flex-row justify-between " >
