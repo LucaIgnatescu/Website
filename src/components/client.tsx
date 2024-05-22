@@ -23,7 +23,7 @@ export function Card({ name, description }: CardInfo = { name: null, description
           </span>
         </span>
       </span>
-      <span className="flex-1 basis-3/4 flex flex-row self-center w-full" onClick={clickHandler}>
+      <span className="flex-1 basis-3/4 flex flex-row self-center w-full">
         {clicked ? <>
           <span className="flex flex-row flex-1 self-center justify-between px-10">
             <span className="w-32 m-3 border border-white/20 rounded-xl flex flex-col justify-between flex-wrap p-2 bg-black hover:border-white hover:cursor-pointer">

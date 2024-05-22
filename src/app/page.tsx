@@ -1,3 +1,5 @@
+import { Cards } from "@/components/server";
+
 export default async function Page() {
 
   return <div>
@@ -20,15 +22,17 @@ export default async function Page() {
     </div>
     <div className="w-auto px-20 text-3xl">
       <div className="py-28 text-gray-300">
-        I am a genius level programmer that makes great websites with an IQ of 200+.
+        I am a programmer that likes webdev and low level!
         <br />
         Hire me!!!!
       </div>
       <h2 className="font-bold text-4xl mb-10 after:bg-white after:block after:w-5 after:h-1 after:my-2">Projects</h2>
       <div>
-        {
-          // This is where project list goes 
-        }
+        <Cards cards={[
+          { name: "Project 1", description: "Description" },
+          { name: "Project 2", description: "BLA BLA BLA" },
+          { name: "Project 3", description: "BLA BLA BLA" }
+        ]} />
       </div>
     </div>
   </div>

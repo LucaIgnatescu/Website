@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     .setExpirationTime("2weeks")
     .sign(secret);
 
-  try {//TODO: OPTIMIZE QUERY
+  try {//TODO: OPTIMIZE QUERY and check for unique!!!!
     await sql`
       INSERT INTO TOKENS (token) VALUES (${refresh}) returning token;
       `;
@@ -57,5 +57,5 @@ export async function GET(req: NextRequest) {
   catch (err) {
     console.log(err);
   }
-  redirect('/auth');
+  redirect(`/auth?access_token=${access}&refresh_token=${refresh}`); //TODO: refactor to use cookies
 }
