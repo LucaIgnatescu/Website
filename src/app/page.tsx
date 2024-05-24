@@ -1,4 +1,11 @@
-import { Cards } from "@/components/server";
+import { Fragment } from "react";
+import { type CardInfo, Card } from "@/components/client";
+
+export async function Cards({ cards }: { cards?: CardInfo[] }) {
+  return <span className="flex flex-row m-5 grow overflow-x-scroll no-scrollbar wrap">
+    {cards?.map((info, i) => <Fragment key={i}> <Card {...info} /> </Fragment>)}
+  </span>
+}
 
 export default async function Page() {
 
