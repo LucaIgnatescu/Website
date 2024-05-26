@@ -1,6 +1,26 @@
+import { log } from 'console';
 import postgres, { Sql } from 'postgres';
 
 let sql: null | Sql = null;
+
+
+export type User = {
+  id: number,
+  username: string,
+  email: string,
+  access_token: string,
+  refresh_token: string
+};
+
+export type IdentityProvider = {
+  id: number,
+  user_id: number,
+  provider: string,
+  username: string,
+  email: string,
+  access_token: string,
+  refresh_token: string
+};
 
 export function dbConnect() {
   if (sql === null) {
