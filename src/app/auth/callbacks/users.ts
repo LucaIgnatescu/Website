@@ -1,7 +1,8 @@
 import { dbConnect } from "@/utils/postgres";
 import { warn } from "console";
 import { access } from "fs";
-import { EncryptJWT, base64url } from "jose";
+import { SignJWT, base64url } from "jose";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 type Provider = 'GitHub' | 'Google';
@@ -10,16 +11,17 @@ const sql = dbConnect();
 
 async function generateTokens(username: string) {
   const secret = base64url.decode(process.env.TOKEN_SECRET!);
-  const access_token = await new EncryptJWT({ username: username })
-    .setProtectedHeader({ alg: 'dir', enc: 'A128CBC-HS256' })
+  const alg = 'HS256';
+  const access_token = await new SignJWT({ username: username })
+    .setProtectedHeader({ alg })
     .setIssuedAt()
-    .setExpirationTime('5m')
-    .encrypt(secret)
-  const refresh_token = await new EncryptJWT({ username: username })
-    .setProtectedHeader({ alg: 'dir', enc: 'A128CBC-HS256' })
+    .setExpirationTime('30s')
+    .sign(secret)
+  const refresh_token = await new SignJWT({ username: username })
+    .setProtectedHeader({ alg })
     .setIssuedAt()
     .setExpirationTime('48h')
-    .encrypt(secret)
+    .sign(secret)
   return { access_token, refresh_token };
 }
 
@@ -46,8 +48,7 @@ const findIdentity = async (email: string, provider: Provider) =>
 const findUser = async (email: string) => await sql`select * from Users where email=${email}`;
 
 export async function manageSignIn(username: string, email: string, provider_access_token: string, provider_refresh_token: string, provider: Provider) {
-  // WARNING: DELETE THESE EVENTUALLY
-  const { access_token, refresh_token } = await generateTokens(email);
+  const { access_token, refresh_token } = await generateTokens(username);
 
   const userQuery = await findUser(email);
   let userId;
@@ -62,4 +63,8 @@ export async function manageSignIn(username: string, email: string, provider_acc
   } else {
     await updateIdentity(provider_access_token, provider_refresh_token, email, provider);
   }
+
+  const cookieStore = cookies();
+  cookieStore.set('access_token', access_token);
+
 }

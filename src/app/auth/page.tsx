@@ -56,6 +56,7 @@ export default async function Page() {
         "use server";
         const sql = dbConnect();
         await sql`delete from users`;
+        await sql`delete from googlestate`;
       }
     } className="bg-red text-center">
       <input type='submit' value='Nuke DB' />
