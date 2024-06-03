@@ -1,26 +1,29 @@
 import { dbConnect } from "@/utils/postgres";
 import { warn } from "console";
 import { access } from "fs";
-import { SignJWT, base64url } from "jose";
+import { EncryptJWT, base64url } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SessionInfo, type Provider } from "@/utils/identity";
 
 const sql = dbConnect();
 
-async function generateTokens(username: string) {
+async function generateTokens(username: string, email: string) {
   const secret = base64url.decode(process.env.TOKEN_SECRET!);
-  const alg = 'HS256';
-  const access_token = await new SignJWT({ username: username })
-    .setProtectedHeader({ alg })
+  const alg = 'dir';
+  const enc = 'A128CBC-HS256';
+  const access_token = await new EncryptJWT({ username, email })
+    .setProtectedHeader({ alg, enc })
     .setIssuedAt()
+    .setIssuer(`LucasAwesomeApp`)
     .setExpirationTime('30s')
-    .sign(secret)
-  const refresh_token = await new SignJWT({ username: username })
-    .setProtectedHeader({ alg })
+    .encrypt(secret)
+  const refresh_token = await new EncryptJWT({ username, email })
+    .setProtectedHeader({ alg, enc })
+    .setIssuer(`LucasAwesomeApp`)
     .setIssuedAt()
     .setExpirationTime('48h')
-    .sign(secret)
+    .encrypt(secret)
   return { access_token, refresh_token };
 }
 
@@ -48,7 +51,7 @@ const findUser = async (email: string) => await sql`select * from Users where em
 
 export async function manageSignIn(sessionInfo: SessionInfo, provider: Provider) {
   const { username, email, provider_access_token, provider_refresh_token } = sessionInfo;
-  const { access_token, refresh_token } = await generateTokens(username);
+  const { access_token, refresh_token } = await generateTokens(username, email);
 
   const userQuery = await findUser(email);
   let userId;

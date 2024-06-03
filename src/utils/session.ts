@@ -1,4 +1,4 @@
-import { base64url, jwtVerify } from "jose";
+import { base64url, jwtDecrypt } from "jose";
 import { JOSEError } from "jose/errors";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -14,7 +14,7 @@ export async function manageSession() {
 
   let errCode;
   try {
-    const res = await jwtVerify(token, secret);
+    const res = await jwtDecrypt(token, secret);
     payload = res.payload;
     protectedHeader = res.protectedHeader;
   } catch (err) {
@@ -23,10 +23,10 @@ export async function manageSession() {
     else
       errCode = 'ERR_OTHER'
   }
-  console.log(errCode);
+  console.log(errCode, payload);
   if (errCode === 'ERR_JWT_EXPIRED') {
     refreshToken();
-  } else if (errCode === 'ERR_JWT_INVALID' || errCode === 'ERR_OTHER') {
+  } else if (errCode === 'ERR_JWT_INVALID' || errCode === 'ERR_OTHER' || errCode === 'ERR_JWE_DECRYPTION_FAILED') {
     redirect('/auth')
   }
 }
