@@ -4,8 +4,7 @@ import { access } from "fs";
 import { SignJWT, base64url } from "jose";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-
-type Provider = 'GitHub' | 'Google';
+import { SessionInfo, type Provider } from "@/utils/identity";
 
 const sql = dbConnect();
 
@@ -47,7 +46,8 @@ const findIdentity = async (email: string, provider: Provider) =>
 
 const findUser = async (email: string) => await sql`select * from Users where email=${email}`;
 
-export async function manageSignIn(username: string, email: string, provider_access_token: string, provider_refresh_token: string, provider: Provider) {
+export async function manageSignIn(sessionInfo: SessionInfo, provider: Provider) {
+  const { username, email, provider_access_token, provider_refresh_token } = sessionInfo;
   const { access_token, refresh_token } = await generateTokens(username);
 
   const userQuery = await findUser(email);
