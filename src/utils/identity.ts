@@ -136,7 +136,6 @@ export const GitHubIdentity: Identity = {
       },
       cache: 'no-store'
     }).then(res => res.json())
-    console.log(tokens);
     if ('error' in tokens) {
       return false;
     }
@@ -145,11 +144,9 @@ export const GitHubIdentity: Identity = {
     try {
       await updateIdentity(access_token, refresh_token, email, this.provider);
     } catch (err) {
-      console.log(err);
-      console.log(access_token, refresh_token, email, this.provider);
       return false;
     }
-    console.log("great success!");
+    console.log('GitHub Identity Refreshed');
     return true
   }
 }
@@ -269,9 +266,28 @@ export const GoogleIdentity: Identity = {
   },
 
   async refreshToken(refresh_token: string, email: string) {
+    const params = new URLSearchParams({
+      client_id: process.env.GOOGLE_CLIENT!,
+      client_secret: process.env.GOOGLE_SECRET!,
+      grant_type: 'refresh_token',
+      refresh_token
+    });
+
+    const discovery = await getGoogleDiscovery();
+    try {
+      const tokens = await fetch(discovery.token_endpoint + '?' + params.toString(), {
+        cache: 'no-store',
+        method: 'POST',
+      }).then(res => res.json())
+      const access_token = tokens.access_token as string;
+      await updateIdentity(access_token, refresh_token, email, this.provider)
+    } catch (err) {
+      console.log(err)
+      return false
+    }
+    console.log("Google identity refreshed");
     return true
   },
-
 }
 
 export function identityFactory(provider: Provider): Identity {

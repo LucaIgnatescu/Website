@@ -7,6 +7,7 @@ import { TokenPayload, generateTokens } from "@/app/auth/callbacks/users";
 import { identityFactory } from "./identity";
 
 const TOKEN_EXPIRATION_TIME = '5s';
+
 export async function manageSession() {
   const cookieStore = cookies();
   if (!cookieStore.has('access_token')) redirect('/auth');
@@ -34,7 +35,6 @@ export async function manageSession() {
 
 // TODO: Remove refresh tokens
 async function refreshSession(payload: TokenPayload) {
-  "use server";
   const sql = dbConnect();
   const { email } = payload;
 
@@ -44,15 +44,30 @@ async function refreshSession(payload: TokenPayload) {
   const checkActive = await Promise.all(
     queryResult.map(({ access_token, provider }) => identityFactory(provider).checkAccessToken(access_token))
   )
-  const isActive = checkActive.reduce((acc, res) => acc || res, false);
 
+  const isActive = checkActive.reduce((acc, res) => acc || res, false);
+  if (isActive) {
+    const { access_token, refresh_token } = await generateTokens(payload);
+    updateUser(access_token, refresh_token, email);
+    const params = new URLSearchParams({
+      access_token: access_token,
+      target: '/'
+    });
+    console.log("OAuth session still valid. Refreshing...")
+    redirect('/auth/set?' + params.toString())
+  }
   const couldRefresh = (await Promise.all(
     queryResult.map(({ refresh_token, provider }) => identityFactory(provider).refreshToken(refresh_token, email))
   )).reduce((acc, res) => acc || res, false);
 
   if (!couldRefresh) redirect('/auth');
-  ;
+
   const { access_token, refresh_token } = await generateTokens(payload);
   updateUser(access_token, refresh_token, email);
-  // TODO: Set cookie
+
+  const params = new URLSearchParams({
+    access_token: access_token,
+    target: '/'
+  });
+  redirect('/auth/set?' + params.toString())
 }
