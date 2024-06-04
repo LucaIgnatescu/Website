@@ -1,7 +1,7 @@
 import { manageSession } from "@/utils/session"
 
-export default function Page() {
-  manageSession();
+export default async function Page() {
+  await manageSession();
 
   return <>
     <h1>

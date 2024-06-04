@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { NextRequest } from "next/server";
-import { dbConnect } from "./postgres";
+import { dbConnect, updateIdentity } from "./postgres";
 import { decodeJwt } from "jose";
 
 export type Provider = 'GitHub' | 'Google';
@@ -16,7 +16,8 @@ type Identity = {
   readonly provider: Provider;
   redirectUser(): void,
   performExchange(req: NextRequest): Promise<SessionInfo>,
-  refreshTokens(): void
+  checkAccessToken(access_token: string): Promise<boolean>,
+  refreshToken(refresh_token: string, email: string): Promise<boolean>
 }
 
 type GitHubToken = {
@@ -110,8 +111,46 @@ export const GitHubIdentity: Identity = {
     };
   },
 
-  refreshTokens() {
+  async checkAccessToken(access_token: string) {
+    const GITHUBAPI = "https://api.github.com";
+    return await fetch(`${GITHUBAPI}/user`, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${access_token}`,
+        "X-GitHub-Api-Version": "2022-11-28"
+      }
+    }).then(res => res.ok).catch(err => false);
+  },
 
+  async refreshToken(refresh_token: string, email: string) {
+    const params = new URLSearchParams({
+      client_id: process.env.GITHUB_CLIENT!,
+      client_secret: process.env.GITHUB_SECRET!,
+      grant_type: 'refresh_token',
+      refresh_token
+    });
+    const tokens = await fetch(process.env.GITHUB_ENDPOINT! + "?" + params.toString(), {
+      method: 'POST',
+      headers: {
+        Accept: "application/vnd.github+json",
+      },
+      cache: 'no-store'
+    }).then(res => res.json())
+    console.log(tokens);
+    if ('error' in tokens) {
+      return false;
+    }
+    refresh_token = tokens.refresh_token as string;
+    const access_token = tokens.access_token as string;
+    try {
+      await updateIdentity(access_token, refresh_token, email, this.provider);
+    } catch (err) {
+      console.log(err);
+      console.log(access_token, refresh_token, email, this.provider);
+      return false;
+    }
+    console.log("great success!");
+    return true
   }
 }
 
@@ -138,6 +177,19 @@ type IDToken = {
   "nonce": string
 }
 
+type DiscoveryDocument = { // NOTE: There are additional properties in this object I did not include in the type
+  "issuer": string,
+  "authorization_endpoint": string,
+  "token_endpoint": string,
+  "userinfo_endpoint": string,
+  "revocation_endpoint": string
+}
+
+async function getGoogleDiscovery(): Promise<DiscoveryDocument> {
+  const url = 'https://accounts.google.com/.well-known/openid-configuration';
+  return await fetch(url, { cache: 'default' }).then(res => res.json()).catch(console.log)
+}
+
 export const GoogleIdentity: Identity = {
   provider: 'Google',
 
@@ -160,7 +212,7 @@ export const GoogleIdentity: Identity = {
       access_type: "offline"
     });
 
-    const baseURI = 'https://accounts.google.com/o/oauth2/v2/auth'  // TODO: Refactor to use discovery document
+    const baseURI = (await getGoogleDiscovery()).authorization_endpoint;  // TODO: Refactor to use discovery document
     const redirectURL = baseURI + '?' + params.toString();
     redirect(redirectURL);
   },
@@ -189,7 +241,9 @@ export const GoogleIdentity: Identity = {
       grant_type: "authorization_code"
     });
 
-    const tokens: GoogleTokens = await fetch("https://oauth2.googleapis.com/token?" + fetchParams.toString(), { method: 'POST', cache: 'no-store' })// TODO: refactor with discovery
+    const endpoint = (await getGoogleDiscovery()).token_endpoint + '?'
+
+    const tokens: GoogleTokens = await fetch(endpoint + fetchParams.toString(), { method: 'POST', cache: 'no-store' })// TODO: refactor with discovery
       .then(res => res.json())
 
     const { email } = decodeJwt(tokens.id_token) as IDToken;
@@ -200,14 +254,33 @@ export const GoogleIdentity: Identity = {
     return { username, email, provider_access_token: access_token, provider_refresh_token: refresh_token }
   },
 
-  refreshTokens() {
+  async checkAccessToken(access_token: string) {
+    // https://developers.google.com/identity/openid-connect/openid-connect#obtaininguserprofileinformation
+    // Use this to check and refresh tokens
+    // TODO: Implement discovery document
+    //
+    const url = (await getGoogleDiscovery()).userinfo_endpoint + '?';
+    return await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${access_token}`,
+        'Acccept': 'application/json'
+      }
+    }).then(res => res.ok).catch(err => false)
+  },
 
-  }
+  async refreshToken(refresh_token: string, email: string) {
+    return true
+  },
 
 }
 
-
-
-
-
+export function identityFactory(provider: Provider): Identity {
+  if (provider == 'GitHub') {
+    return GitHubIdentity;
+  }
+  if (provider == 'Google') {
+    return GoogleIdentity;
+  }
+  return GitHubIdentity;
+}
 
