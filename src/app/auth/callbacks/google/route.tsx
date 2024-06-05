@@ -30,7 +30,6 @@ type IDToken = {
 
 export async function GET(req: NextRequest) {
   const info = await GoogleIdentity.performExchange(req);
-  console.log(info);
 
   await manageSignIn(info, 'Google');
 

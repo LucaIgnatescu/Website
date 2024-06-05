@@ -11,7 +11,7 @@ const TOKEN_EXPIRATION_TIME = '5s';
 
 export async function manageSession() {
   const cookieStore = cookies();
-  if (!cookieStore.has('access_token')) redirect('/auth');
+  if (!cookieStore.has('access_token') || !cookieStore.has('id_token')) redirect('/auth');
   const token: string = cookieStore.get('access_token')?.value!;
   const secret = base64url.decode(process.env.TOKEN_SECRET!);
   let payload: TokenPayload;
@@ -37,7 +37,7 @@ export async function manageSession() {
 // TODO: Remove refresh tokens
 async function refreshSession(payload: TokenPayload) {
   const sql = dbConnect();
-  const { email } = payload;
+  const { email, username } = payload;
 
   const queryResult = await sql`SELECT * FROM IdentityProviders where email=${email}` as IdentityProvider[];
   if (queryResult.length === 0) redirect('/auth');
@@ -49,10 +49,11 @@ async function refreshSession(payload: TokenPayload) {
   const isActive = checkActive.reduce((acc, res) => acc || res, false);
   if (isActive) {
 
-    const { access_token, refresh_token } = await generateTokens(payload);
-    updateUser(access_token, refresh_token, email);
+    const { access_token, id_token } = await generateTokens(payload, { username });
+    updateUser(access_token, id_token, email);
 
     cookies().set('access_token', access_token);
+    cookies().set('id_token', id_token)
     console.log("OAuth session still valid. Refreshing ...");
     return;
   }
@@ -62,8 +63,8 @@ async function refreshSession(payload: TokenPayload) {
 
   if (!couldRefresh) redirect('/auth');
 
-  const { access_token, refresh_token } = await generateTokens(payload);
-  updateUser(access_token, refresh_token, email);
-
+  const { access_token, id_token } = await generateTokens(payload, { username });
+  updateUser(access_token, id_token, email);
   cookies().set('access_token', access_token);
+  cookies().set('id_token', id_token)
 }
