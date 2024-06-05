@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect, Fragment } from "react";
+import { manageSession } from "@/utils/session";
 
 export type CardInfo = {
   name: String | null,
@@ -53,3 +54,13 @@ export function Card({ name, description }: CardInfo = { name: null, description
     </span>
   )
 }
+
+
+export function SessionManager() {
+  useEffect(() => {
+    manageSession()
+  }, []);
+
+  return <Fragment />
+}
+

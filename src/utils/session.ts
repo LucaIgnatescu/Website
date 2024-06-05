@@ -1,3 +1,4 @@
+"use server";
 import { base64url, jwtDecrypt } from "jose";
 import { JOSEError } from "jose/errors";
 import { cookies } from "next/headers";
@@ -47,14 +48,13 @@ async function refreshSession(payload: TokenPayload) {
 
   const isActive = checkActive.reduce((acc, res) => acc || res, false);
   if (isActive) {
+
     const { access_token, refresh_token } = await generateTokens(payload);
     updateUser(access_token, refresh_token, email);
-    const params = new URLSearchParams({
-      access_token: access_token,
-      target: '/'
-    });
-    console.log("OAuth session still valid. Refreshing...")
-    redirect('/auth/set?' + params.toString())
+
+    cookies().set('access_token', access_token);
+    console.log("OAuth session still valid. Refreshing ...");
+    return;
   }
   const couldRefresh = (await Promise.all(
     queryResult.map(({ refresh_token, provider }) => identityFactory(provider).refreshToken(refresh_token, email))
@@ -65,9 +65,5 @@ async function refreshSession(payload: TokenPayload) {
   const { access_token, refresh_token } = await generateTokens(payload);
   updateUser(access_token, refresh_token, email);
 
-  const params = new URLSearchParams({
-    access_token: access_token,
-    target: '/'
-  });
-  redirect('/auth/set?' + params.toString())
+  cookies().set('access_token', access_token);
 }

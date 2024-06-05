@@ -1,11 +1,8 @@
-import { manageSession } from "@/utils/session"
+import { SessionManager } from "@/components/client";
 
-export default async function Page() {
-  await manageSession();
+export default function Page() {
 
   return <>
-    <h1>
-      Should be protected
-    </h1>
+    <SessionManager></SessionManager>
   </>
 }
