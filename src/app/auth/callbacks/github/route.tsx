@@ -9,5 +9,5 @@ export async function GET(req: NextRequest) {
   const info = await GitHubIdentity.performExchange(req);
   await manageSignIn(info, 'GitHub');
 
-  redirect('/auth?status=YAY!'); // TODO: implement status messages
+  redirect('/'); // TODO: implement status messages
 }

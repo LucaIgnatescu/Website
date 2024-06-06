@@ -6,12 +6,14 @@ import { redirect } from "next/navigation";
 import { IdentityProvider, dbConnect, updateUser } from "./postgres";
 import { TokenPayload, generateTokens } from "@/app/auth/callbacks/users";
 import { identityFactory } from "./identity";
+import { redirectWithError } from "./general";
+import { AuthErrorStates } from "@/app/auth/page";
 
 const TOKEN_EXPIRATION_TIME = '5s';
 
 export async function manageSession() {
   const cookieStore = cookies();
-  if (!cookieStore.has('access_token') || !cookieStore.has('id_token')) redirect('/auth');
+  if (!cookieStore.has('access_token') || !cookieStore.has('id_token')) redirectWithError(AuthErrorStates.INVALID_SESSION);
   const token: string = cookieStore.get('access_token')?.value!;
   const secret = base64url.decode(process.env.TOKEN_SECRET!);
   let payload: TokenPayload;
@@ -27,7 +29,7 @@ export async function manageSession() {
       errCode = 'ERR_OTHER'
   }
   if (errCode === 'ERR_JWT_INVALID' || errCode === 'ERR_OTHER' || errCode === 'ERR_JWE_DECRYPTION_FAILED') {
-    await redirect('/auth') // WARN: Triple check that no error codes were missed
+    redirectWithError(AuthErrorStates.INVALID_SESSION) // WARN: Triple check that no error codes were missed
   } else if (errCode === 'ERR_JWT_EXPIRED') {
     payload = (await jwtDecrypt(token, secret)).payload as TokenPayload;
     await refreshSession(payload)
@@ -40,7 +42,7 @@ async function refreshSession(payload: TokenPayload) {
   const { email, username } = payload;
 
   const queryResult = await sql`SELECT * FROM IdentityProviders where email=${email}` as IdentityProvider[];
-  if (queryResult.length === 0) redirect('/auth');
+  if (queryResult.length === 0) redirectWithError(AuthErrorStates.INVALID_SESSION);
 
   const checkActive = await Promise.all(
     queryResult.map(({ access_token, provider }) => identityFactory(provider).checkAccessToken(access_token))
@@ -61,7 +63,7 @@ async function refreshSession(payload: TokenPayload) {
     queryResult.map(({ refresh_token, provider }) => identityFactory(provider).refreshToken(refresh_token, email))
   )).reduce((acc, res) => acc || res, false);
 
-  if (!couldRefresh) redirect('/auth');
+  if (!couldRefresh) redirectWithError(AuthErrorStates.PROVIDER_ERROR);
 
   const { access_token, id_token } = await generateTokens(payload, { username });
   updateUser(access_token, id_token, email);

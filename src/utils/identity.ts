@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { NextRequest } from "next/server";
 import { dbConnect, updateIdentity } from "./postgres";
 import { decodeJwt } from "jose";
+import { AuthErrorStates } from "@/app/auth/page";
+import { redirectWithError } from "./general";
 
 export type Provider = 'GitHub' | 'Google';
 
@@ -12,9 +14,9 @@ export type SessionInfo = {
   provider_refresh_token: string
 }
 
-type Identity = {
+export type Identity = {
   readonly provider: Provider;
-  redirectUser(): void,
+  redirectUser(): Promise<void>,
   performExchange(req: NextRequest): Promise<SessionInfo>,
   checkAccessToken(access_token: string): Promise<boolean>,
   refreshToken(refresh_token: string, email: string): Promise<boolean>
@@ -47,7 +49,7 @@ type GitHubEmail = {
 export const GitHubIdentity: Identity = {
   provider: 'GitHub',
 
-  redirectUser() {
+  async redirectUser() {
     const redirectURL = `https://github.com/login/oauth/authorize?` +
       `client_id=${process.env.GITHUB_CLIENT}`;
     redirect(redirectURL);
@@ -58,21 +60,25 @@ export const GitHubIdentity: Identity = {
     const code = req.nextUrl.searchParams.get("code");
 
     if (!code) { // TODO: Clearly signal an error has occured
-      redirect('/auth');
+      redirectWithError(AuthErrorStates.PROVIDER_ERROR);
+
     }
 
     const res = await fetch(
       "https://github.com/login/oauth/access_token?" + new URLSearchParams({
         client_id: process.env.GITHUB_CLIENT!,
         client_secret: process.env.GITHUB_SECRET!,
-        code: code,
+        code: code!,
       }), {
       method: "POST",
       headers: {
         Accept: "application/vnd.github+json"
       },
       cache: "no-store",
-    }).then(res => res.json()).catch(err => redirect('/auth')) as GitHubToken;
+    }).then(res => res.json()).catch(err => {
+      console.error(err);
+      redirectWithError(AuthErrorStates.PROVIDER_ERROR);
+    }) as GitHubToken;
     const { access_token, refresh_token } = res;
 
     const user = await fetch(`${GITHUBAPI}/user`, {
@@ -84,7 +90,7 @@ export const GitHubIdentity: Identity = {
     }).then(res => res.json())
       .catch(err => {
         console.log(err);
-        redirect('/auth');
+        redirectWithError(AuthErrorStates.PROVIDER_ERROR);
       }) as GitHubUser;
 
     let { login, email } = user;
@@ -99,7 +105,7 @@ export const GitHubIdentity: Identity = {
       }).then(res => res.json())
         .catch(err => {
           console.log(err);
-          redirect('/auth?status=noemail');
+          redirectWithError(AuthErrorStates.NO_EMAIL);
         }) as GitHubEmail[];
       email = emails.find(elem => elem.primary)!.email;//there has to be a primary email
     }
@@ -217,15 +223,15 @@ export const GoogleIdentity: Identity = {
   async performExchange(req: NextRequest) {
     const sql = dbConnect();
     const reqParams = req.nextUrl.searchParams;
-    if (!reqParams.has('state') || !reqParams.has('code')) redirect('/auth');
+    if (!reqParams.has('state') || !reqParams.has('code')) redirectWithError(AuthErrorStates.PROVIDER_ERROR);
     const token = reqParams.get('state') as string;
     const code = reqParams.get('code') as string;
     const tokenSearchResult = await sql`
     select * from GoogleState
     WHERE token=${token}`;
-    if (tokenSearchResult.length == 0) redirect('/auth');
+    if (tokenSearchResult.length == 0) redirectWithError(AuthErrorStates.PROVIDER_ERROR);
     const csrf = tokenSearchResult[0].token;
-    if (csrf != token) redirect('/auth');
+    if (csrf != token) redirectWithError(AuthErrorStates.PROVIDER_ERROR);
 
     await sql`DELETE from GoogleState
             WHERE token=${token}`;

@@ -1,30 +1,37 @@
 import { dbConnect } from "@/utils/postgres";
-import { redirect } from "next/navigation";
 import { GitHubIdentity, GoogleIdentity } from "@/utils/identity";
 
-async function GitHubLoginBtn() {
-  return <div className="bg-green-50 text-center text-black">
-    <form action={async () => {
-      "use server";
-      GitHubIdentity.redirectUser();
-    }
-    }>
-      <input type="submit" value={"Log In with GitHub"} />
-    </form>
-  </div>
+export enum AuthErrorStates {
+  PROVIDER_ERROR,
+  NO_EMAIL,
+  NO_SESSION,
+  GENERIC,
+  SESSION_EXPIRED
 }
 
-async function GoogleLoginBtn() {
+
+// NOTE: These functions cannot be made into a component, because they behave
+// weirdly with server actions and props passing
+async function GitHubLoginBtn({ className }: { className?: string }) {
+  return <form action={async () => {
+    "use server";
+    await GitHubIdentity.redirectUser();
+  }
+  } className={className}>
+    <input type="submit" value={"Log In with " + GitHubIdentity.provider} />
+  </form>
+}
+
+
+async function GoogleLoginBtn({ className }: { className?: string }) {
   const action = async () => {
     "use server";
     await GoogleIdentity.redirectUser(); // WARN: cannot remove this await or redirect behaves weirdly
   }
 
-  return <div className="bg-green text-center text-blue">
-    <form action={action}>
-      <input type='submit' value='Log In with Google' />
-    </form>
-  </div>
+  return <form action={action} className={className}>
+    <input type='submit' value='Log In with Google' />
+  </form>
 }
 
 export default async function Page() {
