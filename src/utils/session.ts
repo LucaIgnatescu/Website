@@ -2,7 +2,6 @@
 import { base64url, jwtDecrypt } from "jose";
 import { JOSEError } from "jose/errors";
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { IdentityProvider, dbConnect, updateUser } from "./postgres";
 import { TokenPayload, generateTokens } from "@/app/auth/callbacks/users";
 import { identityFactory } from "./identity";
