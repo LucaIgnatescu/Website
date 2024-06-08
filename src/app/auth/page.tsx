@@ -4,9 +4,8 @@ import { GitHubIdentity, GoogleIdentity } from "@/utils/identity";
 export enum AuthErrorStates {
   PROVIDER_ERROR,
   NO_EMAIL,
-  NO_SESSION,
+  INVALUD_SESSION,
   GENERIC,
-  SESSION_EXPIRED
 }
 
 
@@ -34,10 +33,18 @@ async function GoogleLoginBtn({ className }: { className?: string }) {
   </form>
 }
 
+async function LoginMenu() {
+  return (
+    <div className="">
+      <GitHubLoginBtn />
+      <GoogleLoginBtn />
+    </div>
+  );
+}
+
 export default async function Page() {
   return <>
-    <GitHubLoginBtn />
-    <GoogleLoginBtn />
+    <LoginMenu />
     <form action={
       async () => { // FIX: NEEDS TO BE REMOVED EVENTUALLY
         "use server";

@@ -50,6 +50,7 @@ export const GitHubIdentity: Identity = {
   provider: 'GitHub',
 
   async redirectUser() {
+    "use server";
     const redirectURL = `https://github.com/login/oauth/authorize?` +
       `client_id=${process.env.GITHUB_CLIENT}`;
     redirect(redirectURL);
