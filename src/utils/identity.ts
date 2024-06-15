@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { NextRequest } from "next/server";
 import { dbConnect, updateIdentity } from "./postgres";
 import { decodeJwt } from "jose";
-import { AuthErrorStates } from "@/app/auth/page";
+import { AuthErrorStates } from "@/app/auth/client";
 import { redirectWithError } from "./general";
 
 export type Provider = 'GitHub' | 'Google';

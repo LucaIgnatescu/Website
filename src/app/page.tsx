@@ -1,10 +1,11 @@
 import { Fragment } from "react";
-import { type CardInfo, Card } from "@/components/client";
+import { type CardInfo, Card, ScrollableContainer } from "@/components/client";
+
 
 export async function Cards({ cards }: { cards?: CardInfo[] }) {
-  return <span className="flex flex-row m-5 grow overflow-x-scroll no-scrollbar wrap">
+  return <>
     {cards?.map((info, i) => <Fragment key={i}> <Card {...info} /> </Fragment>)}
-  </span>
+  </>
 }
 
 export default async function Page() {
@@ -34,13 +35,13 @@ export default async function Page() {
         Hire me!!!!
       </div>
       <h2 className="font-bold text-4xl mb-10 after:bg-white after:block after:w-5 after:h-1 after:my-2">Projects</h2>
-      <div>
+      <ScrollableContainer className="flex flex-row m-5 grow overflow-x-scroll no-scrollbar wrap select-none">
         <Cards cards={[
           { name: "Project 1", description: "Description" },
           { name: "Project 2", description: "BLA BLA BLA" },
           { name: "Project 3", description: "BLA BLA BLA" }
         ]} />
-      </div>
+      </ScrollableContainer>
     </div>
   </div>
 }

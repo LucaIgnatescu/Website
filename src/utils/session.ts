@@ -6,7 +6,7 @@ import { IdentityProvider, dbConnect, updateUser } from "./postgres";
 import { TokenPayload, generateTokens } from "@/app/auth/callbacks/users";
 import { identityFactory } from "./identity";
 import { redirectWithError } from "./general";
-import { AuthErrorStates } from "@/app/auth/page";
+import { AuthErrorStates } from "@/app/auth/client";
 
 const TOKEN_EXPIRATION_TIME = '5s';
 

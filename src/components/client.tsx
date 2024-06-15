@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect, Fragment, MouseEventHandler, useRef } from "react";
 import { manageSession } from "@/utils/session";
 
 export type CardInfo = {
@@ -62,5 +62,39 @@ export function SessionManager() {
   }, []);
 
   return <Fragment />
+}
+
+export function ScrollableContainer({ children, className }: Readonly<{ children: React.ReactNode, className?: string }>) {
+  if (!className) className = "";
+  const mouseX = useRef(null as null | number);
+  const ref = useRef(null);
+  const scroll = useRef(0);
+  const [cursor, setCursor] = useState(' cursor-grab');
+
+  const clickHandler: MouseEventHandler = (event) => {
+    if (ref.current === null) return;
+    const div = ref.current as HTMLDivElement;
+    scroll.current = div.scrollLeft;
+    mouseX.current = event.pageX;
+    setCursor(' cursor-grabbing');
+  }
+  const moveHandler: MouseEventHandler = (event) => {
+    if (mouseX.current === null || ref.current === null) return;
+    const div = ref.current as HTMLDivElement;
+    const mousePos = event.pageX;
+    div.scrollLeft = scroll.current - (mousePos - mouseX.current);
+  }
+  const upHandler: MouseEventHandler = (event) => {
+    if (mouseX.current === null || ref.current === null) return;
+    const div = ref.current as HTMLDivElement;
+    const mousePos = event.pageX;
+    scroll.current -= (mousePos - mouseX.current);
+    mouseX.current = null;
+    setCursor(' cursor-grab');
+  }
+  return <div onMouseDown={clickHandler} onMouseMove={moveHandler} onMouseUp={upHandler}
+    className={className + cursor} ref={ref}>
+    {children}
+  </div>
 }
 
