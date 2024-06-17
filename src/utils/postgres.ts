@@ -49,7 +49,7 @@ export const createUser = (username: string, email: string, access_token: string
         returning id`.then(res => res[0].id);
 
 export const updateUser = (access_token: string, id_token: string, email: string) =>
-  dbConnect()`UPDATE Users SET access_token=${access_token}, refresh_token=${id_token} WHERE email=${email}
+  dbConnect()`UPDATE Users SET access_token=${access_token}, id_token=${id_token} WHERE email=${email}
             RETURNING id`.then(res => res[0].id);
 
 export const findIdentity = async (email: string, provider: Provider) =>
